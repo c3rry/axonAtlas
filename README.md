@@ -1,2 +1,2 @@
 # axonAtlas
-tool to convert registered light-sheet microscopy brain imaging data into axon density plots!
+developing a a Streamlit web application, that can convert light-sheet imaged mouse brains into axon segmentation masks, density based heatmaps, and Allen Atlas region axon based 3D visualizations. This web application implements BrainReg and TrailMap to integrate an automatic Allen Atlas Volumetric Registration aided by a computer vision model to detect optimal data orientation, as well as a 3D CNN for axonal extraction
