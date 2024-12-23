@@ -12,7 +12,7 @@ then enter the conda enviorment with this command:
     conda activate axonAtlas
 then download all app dependencies with this command:
 ##
-    pip install streamlit tifffile
+    pip install streamlit tifffile matplotlib
 run the streamlit app with this command:
 ##
     streamlit run app.py --server.maxUploadSize 1000
