@@ -2,11 +2,32 @@ import streamlit as st
 import tifffile
 import numpy as np
 import tempfile
+import matplotlib.cm as cm
 
 class OptimizedTiffViewer:
     def __init__(self):
         self.data = None
         self.views = ['XZ', 'XY', 'YZ']
+        self.colormaps = {
+            'bone': cm.bone,
+            'binary': cm.binary,
+            'spring': cm.spring,
+            'summer': cm.summer,
+            'autumn': cm.autumn,
+            'winter': cm.winter,
+            'pink': cm.pink,
+            'viridis': cm.viridis,
+            'plasma': cm.plasma,
+            'inferno': cm.inferno,
+            'magma': cm.magma,
+            'hot': cm.hot,
+            'cool': cm.cool,
+            'coolwarm': cm.coolwarm,
+            'RdYlBu': cm.RdYlBu,
+            'seismic': cm.seismic,
+            'turbo': cm.turbo,
+            'hsv': cm.hsv
+        }
         if 'current_view' not in st.session_state:
             st.session_state.current_view = 0
         if 'rotation_angle' not in st.session_state:
@@ -29,7 +50,8 @@ class OptimizedTiffViewer:
         adjusted = (adjusted - brightness_min) / (brightness_max - brightness_min)
         return adjusted
     
-    def GetSlice(self, view_type, index, brightness_min, brightness_max):
+    def GetSlice(self, view_type, index, brightness_min, brightness_max, colormap):
+        # Get the slice data
         if view_type == 'XY':
             slice_data = self.data[index, :, :]
         elif view_type == 'YZ':
@@ -37,11 +59,18 @@ class OptimizedTiffViewer:
         else:  # XZ
             slice_data = np.rot90(self.data[:, index, :])
         
-        # Apply 90-degree rotations based on rotation state
+        # Apply rotations
         for _ in range(st.session_state.rotation_angle):
             slice_data = np.rot90(slice_data)
-            
-        return self.AdjustBrightness(slice_data, brightness_min, brightness_max)
+        
+        # Apply brightness adjustment
+        adjusted = self.AdjustBrightness(slice_data, brightness_min, brightness_max)
+        
+        # Apply colormap
+        colored = self.colormaps[colormap](adjusted)
+        
+        # Convert to uint8 for display
+        return (colored * 255).astype(np.uint8)
     
     def RotateView(self):
         st.session_state.current_view = (st.session_state.current_view + 1) % 3
@@ -58,7 +87,17 @@ class OptimizedTiffViewer:
                 self.data = self.LoadTiff(uploadedFile)
                 z_max, y_max, x_max = self.data.shape
                 
-                # Show buttons after file upload
+                # Controls in sidebar
+                st.sidebar.subheader("Controls")
+                
+                # Colormap selection
+                selected_colormap = st.sidebar.selectbox(
+                    "Select Colormap",
+                    list(self.colormaps.keys()),
+                    index=0
+                )
+                
+                # View rotation buttons
                 col1, col2 = st.sidebar.columns(2)
                 with col1:
                     if st.button("Switch View"):
@@ -68,11 +107,11 @@ class OptimizedTiffViewer:
                         self.Rotate90()
                 
                 # Brightness controls
-                st.sidebar.subheader("Brightness Control")
+                st.sidebar.subheader("Brightness")
                 data_min = float(self.data.min())
                 data_max = float(self.data.max())
                 brightness_range = st.sidebar.slider(
-                    "Brightness Range",
+                    "Range",
                     min_value=data_min,
                     max_value=data_max,
                     value=(data_min, data_max)
@@ -95,7 +134,7 @@ class OptimizedTiffViewer:
                 
                 slice_idx = st.slider(slice_label, 0, max_slice, max_slice//2)
                 
-                # Display image with reduced size
+                # Display image
                 col1, col2, col3 = st.columns([1, 2, 1])
                 with col2:
                     st.image(
@@ -103,7 +142,8 @@ class OptimizedTiffViewer:
                             current_view, 
                             slice_idx, 
                             brightness_range[0], 
-                            brightness_range[1]
+                            brightness_range[1],
+                            selected_colormap
                         ),
                         use_column_width=True
                     )
