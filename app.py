@@ -12,6 +12,8 @@ class OptimizedTiffViewer:
         self.volumes = {}
         self.views = ['XZ', 'XY', 'YZ']
         self.colormaps = {
+            'bone': cm.bone,
+            'turbo': cm.turbo,
             'viridis': cm.viridis,
             'plasma': cm.plasma,
             'hot': cm.hot,
@@ -55,8 +57,7 @@ class OptimizedTiffViewer:
         # Create output area for terminal logs
         terminal_output = st.empty()
         
-        uploaded_files = st.sidebar.file_uploader(
-            "Upload TIFF stacks",
+        uploaded_files = st.file_uploader("upload tiffStacks",
             type=['tif', 'tiff'],
             accept_multiple_files=True
         )
@@ -75,22 +76,22 @@ class OptimizedTiffViewer:
             max_y = max(vol['data'].shape[1] for vol in self.volumes.values())
             max_x = max(vol['data'].shape[2] for vol in self.volumes.values())
             
-            st.sidebar.subheader("View Controls")
+            st.sidebar.subheader("view controls")
             col1, col2 = st.sidebar.columns(2)
             with col1:
-                if st.button("Switch View"):
+                if st.button("switch view"):
                     st.session_state.current_view = (st.session_state.current_view + 1) % 3
             with col2:
-                if st.button("Rotate 90°"):
+                if st.button("rotate 90°"):
                     st.session_state.rotation_angle = (st.session_state.rotation_angle + 1) % 4
             
-            st.sidebar.subheader("Volume Controls")
+            st.sidebar.subheader("volume controls")
             for vol_id in self.volumes:
-                with st.sidebar.expander(f"Controls for {vol_id}"):
+                with st.sidebar.expander(vol_id):
                     vol_data = self.volumes[vol_id]
                     
                     vol_data['colormap'] = st.selectbox(
-                        "Colormap",
+                        "colormap",
                         list(self.colormaps.keys()),
                         key=f"colormap_{vol_id}"
                     )
@@ -98,7 +99,7 @@ class OptimizedTiffViewer:
                     data_min = float(vol_data['data'].min())
                     data_max = float(vol_data['data'].max())
                     vol_data['brightness_range'] = st.slider(
-                        "Brightness",
+                        "brightness",
                         min_value=data_min,
                         max_value=data_max,
                         value=(data_min, data_max),
@@ -106,7 +107,7 @@ class OptimizedTiffViewer:
                     )
                     
                     vol_data['opacity'] = st.slider(
-                        "Opacity",
+                        "opacity",
                         min_value=0.0,
                         max_value=1.0,
                         value=1.0,
@@ -119,11 +120,11 @@ class OptimizedTiffViewer:
                             f'trailmap_input_{vol_id.replace(".tif", "")}'
                         )
                         save_tiff_sequence(vol_data['data'], output_dir)
-                        st.success(f"Saved frames to: {output_dir}")
+                        st.success(f"saved frames to: {output_dir}")
             
             # TrailMap batch processing button
-            st.sidebar.subheader("TrailMap Processing")
-            if st.sidebar.button("Process All TrailMap Inputs"):
+            st.sidebar.subheader("TrailMap processing")
+            if st.sidebar.button("process All TrailMap Inputs"):
                 try:
                     import sys
                     import subprocess
@@ -156,13 +157,13 @@ class OptimizedTiffViewer:
                         else:
                             st.sidebar.error("TrailMap processing failed!")
                     else:
-                        st.sidebar.warning("No TrailMap input folders found")
+                        st.sidebar.warning("no TrailMap input folders found")
                         
                 except Exception as e:
-                    st.sidebar.error(f"Failed to run TrailMap: {str(e)}")
+                    st.sidebar.error(f"failed to run TrailMap: {str(e)}")
             
             current_view = self.views[st.session_state.current_view]
-            st.subheader(f"Current View: {current_view}")
+            st.subheader(f"current view: {current_view}")
             
             if current_view == 'XY':
                 slice_idx = st.slider("Z", 0, max_z-1, max_z//2)
