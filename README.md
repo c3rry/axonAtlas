@@ -21,7 +21,7 @@ then enter the conda enviorment with this command:
 ##
 then download all app dependencies with this command:
 ##
-    pip install streamlit tifffile matplotlib
+    pip install streamlit tifffile matplotlib brainreg
 ##
 run the streamlit app with this command:
 ##
