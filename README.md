@@ -25,7 +25,7 @@ then download all app dependencies with this command:
 ##
 run the streamlit app with this command:
 ##
-    streamlit run app.py --server.maxUploadSize 1000
+    streamlit run app.py --server.maxUploadSize 10000
 ##
 
 
